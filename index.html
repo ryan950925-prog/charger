@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>충전기 모델 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F8F9FB;
+    --surface: #FFFFFF;
+    --surface-hover: #F3F4F8;
+    --border: #E5E7EB;
+    --border-light: #F0F1F5;
+    --text: #111318;
+    --text-secondary: #6B7280;
+    --text-muted: #9CA3AF;
+    --accent: #2563EB;
+    --accent-hover: #1D4ED8;
+    --accent-soft: rgba(37, 99, 235, 0.08);
+    --green: #16A34A;
+    --green-soft: rgba(22, 163, 74, 0.08);
+    --red: #DC2626;
+    --red-soft: rgba(220, 38, 38, 0.07);
+    --orange: #EA580C;
+    --orange-soft: rgba(234, 88, 12, 0.08);
+    --purple: #7C3AED;
+    --purple-soft: rgba(124, 58, 237, 0.08);
+    --cyan: #0891B2;
+    --cyan-soft: rgba(8, 145, 178, 0.08);
+    --radius: 8px;
+    --radius-sm: 6px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  .page-header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+  .page-header p { color: var(--text-secondary); font-size: 13px; margin-top: 3px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 5px; padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.12s; font-family: inherit; white-space: nowrap; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost { background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface-hover); color: var(--text); }
+  .btn-danger-text { background: none; color: var(--red); border: none; padding: 6px 8px; }
+  .btn-danger-text:hover { background: var(--red-soft); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn svg { width: 15px; height: 15px; }
+
+  /* Stats */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+  .stat-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; }
+  .stat-card .value { font-size: 26px; font-weight: 800; letter-spacing: -1px; margin-top: 4px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 0; overflow-x: auto; }
+  .tab { padding: 9px 16px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border: none; border-bottom: 2px solid transparent; background: none; font-family: inherit; transition: all 0.12s; white-space: nowrap; }
+  .tab:hover { color: var(--text-secondary); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab .cnt { font-size: 11px; background: var(--surface-hover); padding: 1px 6px; border-radius: 10px; margin-left: 4px; font-weight: 600; color: var(--text-muted); }
+  .tab.active .cnt { background: var(--accent-soft); color: var(--accent); }
+
+  /* Table */
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 0 0 var(--radius) var(--radius); border-top: none; overflow: hidden; }
+  .table-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-light); gap: 8px; flex-wrap: wrap; }
+  .toolbar-left { display: flex; gap: 8px; align-items: center; }
+
+  .search-box { display: flex; align-items: center; gap: 7px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 10px; width: 220px; background: var(--bg); }
+  .search-box svg { width: 14px; height: 14px; color: var(--text-muted); flex-shrink: 0; }
+  .search-box input { background: none; border: none; color: var(--text); font-size: 13px; width: 100%; outline: none; font-family: inherit; }
+  .search-box input::placeholder { color: var(--text-muted); }
+  .filter-select { padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); font-size: 12px; font-family: inherit; color: var(--text-secondary); cursor: pointer; outline: none; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--border-light); background: var(--bg); white-space: nowrap; }
+  td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface-hover); }
+
+  .mfr-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; }
+  .mfr-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  .tag { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.2px; }
+  .tag-dual { background: var(--purple-soft); color: var(--purple); }
+  .tag-single { background: var(--green-soft); color: var(--green); }
+  .tag-3mode { background: var(--orange-soft); color: var(--orange); }
+  .tag-pb { background: var(--cyan-soft); color: var(--cyan); }
+  .tag-na { background: var(--surface-hover); color: var(--text-muted); }
+
+  .conn-chips { display: flex; flex-wrap: wrap; gap: 3px; }
+  .conn-chip { display: inline-flex; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; background: var(--surface-hover); color: var(--text-secondary); border: 1px solid var(--border-light); }
+
+  .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .checkbox-group label { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text); cursor: pointer; padding: 5px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); transition: all 0.12s; }
+  .checkbox-group label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .checkbox-group input { accent-color: var(--accent); cursor: pointer; }
+
+  .power-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .power-unit { color: var(--text-muted); font-size: 11px; margin-left: 1px; }
+  .actions-cell { display: flex; gap: 2px; }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); font-size: 13px; }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(3px); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--border-light); }
+  .modal-header h2 { font-size: 15px; font-weight: 700; }
+  .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; }
+  .modal-close:hover { color: var(--text); background: var(--surface-hover); }
+  .modal-body { padding: 22px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 11px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.12s; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px; border-top: 1px solid var(--border-light); }
+
+  .inline-add { display: none; gap: 8px; margin-top: 8px; align-items: center; }
+  .inline-add.show { display: flex; }
+  .inline-add input { flex: 1; padding: 7px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; color: var(--text); outline: none; }
+  .inline-add input:focus { border-color: var(--accent); }
+
+  .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  .pm-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+  .pm-row input { width: 80px !important; text-align: center; }
+  .pm-row span { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+  .pm-display { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+
+  .delete-body { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+  .delete-name { font-weight: 700; color: var(--text); }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: #fff; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 14px rgba(0,0,0,0.15); opacity: 0; transition: all 0.25s cubic-bezier(0.4,0,0.2,1); z-index: 200; display: flex; align-items: center; gap: 8px; }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .toast svg { width: 16px; height: 16px; color: #4ADE80; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <h1>충전기 모델 관리</h1>
+    <p>외부 제조사별 충전기 모델 등록 및 관리</p>
+  </div>
+  <button class="btn btn-primary" onclick="openModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    모델 추가
+  </button>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="label">등록 제조사</div><div class="value" id="s-mfr">4</div></div>
+  <div class="stat-card"><div class="label">전체 모델</div><div class="value" id="s-total">11</div></div>
+  <div class="stat-card"><div class="label">동시 충전</div><div class="value" id="s-dual">0</div></div>
+  <div class="stat-card"><div class="label">단독 충전</div><div class="value" id="s-single">0</div></div>
+</div>
+
+<div class="tabs" id="tabsContainer"></div>
+
+<div class="table-card">
+  <div class="table-toolbar">
+    <div class="toolbar-left">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="모델명 검색..." id="searchInput" oninput="renderTable()">
+      </div>
+      <select class="filter-select" id="connFilter" onchange="renderTable()">
+        <option value="">커넥터 전체</option>
+        <option value="Dual">Dual</option>
+        <option value="Single">Single</option>
+        <option value="3mode">3mode</option>
+      </select>
+      <select class="filter-select" id="pbFilter" onchange="renderTable()">
+        <option value="">파워뱅크 전체</option>
+        <option value="1:3">1:3</option>
+        <option value="1:2">1:2</option>
+        <option value="1:1">1:1</option>
+      </select>
+    </div>
+  </div>
+  <table>
+    <thead><tr>
+      <th>제조사</th>
+      <th>모델명</th>
+      <th>출력</th>
+      <th>커넥터 방식</th>
+      <th>커넥터 타입</th>
+      <th>파워뱅크</th>
+      <th>파워모듈</th>
+      <th style="width:90px;"></th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<!-- Model Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">충전기 모델 추가</h2>
+      <button class="modal-close" onclick="closeModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+
+      <div class="form-group">
+        <label>제조사</label>
+        <select id="fMfr"><option value="">선택</option></select>
+        <div class="inline-add" id="inlineAdd">
+          <input type="text" id="newMfrName" placeholder="새 제조사명 입력">
+          <button class="btn btn-primary btn-sm" onclick="addInlineMfr()">추가</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleInlineAdd(false)">취소</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>모델명</label>
+        <input type="text" id="fName" placeholder="예: V1, 3Mode 충전기">
+      </div>
+
+      <div class="form-group">
+        <label>실제 모델명 (제조사 정식 명칭)</label>
+        <input type="text" id="fModelCode" placeholder="예: SIGEN-DC200-D, EVA-AC7000">
+        <div class="form-hint">로그 매칭에 사용됩니다. 제조사에서 부여한 정확한 모델명을 입력해주세요.</div>
+      </div>
+
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>출력 (kW)</label>
+          <input type="number" id="fPower" placeholder="200">
+        </div>
+        <div class="form-group">
+          <label>커넥터 방식</label>
+          <select id="fConn">
+            <option value="Dual">Dual</option>
+            <option value="Single">Single</option>
+            <option value="3mode">3mode</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>파워뱅크</label>
+          <select id="fPb">
+            <option value="">해당없음</option>
+            <option value="1:3">1:3</option>
+            <option value="1:2">1:2</option>
+            <option value="1:1">1:1</option>
+          </select>
+          <div class="form-hint">파워뱅크 구성이 있는 경우만 선택</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>커넥터 타입</label>
+        <div class="checkbox-group" id="fConnTypes">
+          <label><input type="checkbox" value="DC콤보"> DC콤보</label>
+          <label><input type="checkbox" value="NACS"> NACS</label>
+          <label><input type="checkbox" value="차데모"> 차데모</label>
+          <label><input type="checkbox" value="AC3상"> AC3상</label>
+          <label><input type="checkbox" value="AC완속"> AC완속</label>
+        </div>
+        <div class="form-hint">해당 모델에 장착된 커넥터 타입을 모두 선택해주세요.</div>
+      </div>
+
+      <div class="form-group">
+        <label>파워모듈</label>
+        <div class="pm-row">
+          <input type="number" id="fPmKw" placeholder="kW" min="1">
+          <span>kW ×</span>
+          <input type="number" id="fPmCount" placeholder="개수" min="1">
+          <span>개</span>
+        </div>
+        <div class="form-hint">파워모듈 단위 출력과 수량을 입력해주세요. (예: 50kW × 4개)</div>
+      </div>
+
+      <div class="form-group">
+        <label>비고</label>
+        <textarea id="fNote" rows="2" placeholder="선택사항"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveModel()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="delModal">
+  <div class="modal" style="width:380px;">
+    <div class="modal-header">
+      <h2>모델 삭제</h2>
+      <button class="modal-close" onclick="document.getElementById('delModal').classList.remove('show')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body"><p class="delete-body"><span class="delete-name" id="delName"></span> 모델을 삭제하시겠습니까?</p></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('delModal').classList.remove('show')">취소</button>
+      <button class="btn btn-primary" style="background:var(--red);" id="delBtn">삭제</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="toastMsg"></span></div>
+
+<script>
+  // ===== DATA =====
+  const MFR_COLORS = { sk:'#EA580C', chavi:'#7C3AED', eva:'#16A34A', costel:'#2563EB' };
+  const colorPool = ['#D946EF','#0891B2','#CA8A04','#E11D48','#4F46E5','#059669'];
+  let colorIdx = 0;
+
+  let manufacturers = [
+    { id:'sk', name:'SK시그넷' },
+    { id:'chavi', name:'채비' },
+    { id:'eva', name:'에바' },
+    { id:'costel', name:'코스텔' },
+  ];
+
+  let models = [
+    { id:1,  mfrId:'sk',     name:'V1',          modelCode:'', power:200, conn:'Dual',   connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
+    { id:2,  mfrId:'sk',     name:'V1',          modelCode:'', power:100, conn:'Dual',   connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
+    { id:3,  mfrId:'sk',     name:'V2',          modelCode:'', power:200, conn:'Single', connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
+    { id:4,  mfrId:'sk',     name:'초급속',       modelCode:'', power:350, conn:'Single', connTypes:['DC콤보'],              pb:'1:3', pmKw:null, pmCount:null, note:'파워뱅크 1개 + 디스펜서 3개' },
+    { id:5,  mfrId:'sk',     name:'초급속',       modelCode:'', power:350, conn:'Single', connTypes:['DC콤보'],              pb:'1:1', pmKw:null, pmCount:null, note:'배터리 내장형' },
+    { id:6,  mfrId:'eva',    name:'완속 충전기',   modelCode:'', power:7,   conn:'Single', connTypes:['AC완속'],              pb:'',    pmKw:null, pmCount:null, note:'' },
+    { id:7,  mfrId:'costel', name:'완속 충전기',   modelCode:'', power:7,   conn:'Single', connTypes:['AC완속'],              pb:'',    pmKw:null, pmCount:null, note:'' },
+    { id:8,  mfrId:'chavi',  name:'급속',         modelCode:'', power:100, conn:'Dual',   connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
+    { id:9,  mfrId:'chavi',  name:'급속',         modelCode:'', power:30,  conn:'Single', connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
+    { id:10, mfrId:'chavi',  name:'급속',         modelCode:'', power:100, conn:'Single', connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
+    { id:11, mfrId:'chavi',  name:'급속',         modelCode:'', power:200, conn:'Dual',   connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
+  ];
+
+  let nextId = 12, activeTab = 'all';
+
+  // ===== HELPERS =====
+  function getMfr(id) { return manufacturers.find(m=>m.id===id); }
+  function getMfrColor(id) { return MFR_COLORS[id]||'#6B7280'; }
+
+  // ===== RENDER =====
+  function renderTabs() {
+    const c = document.getElementById('tabsContainer');
+    let h = `<button class="tab ${activeTab==='all'?'active':''}" data-tab="all" onclick="setTab(this)">전체 <span class="cnt">${models.length}</span></button>`;
+    manufacturers.forEach(m => {
+      const cnt = models.filter(x=>x.mfrId===m.id).length;
+      h += `<button class="tab ${activeTab===m.id?'active':''}" data-tab="${m.id}" onclick="setTab(this)">${m.name} <span class="cnt">${cnt}</span></button>`;
+    });
+    c.innerHTML = h;
+  }
+
+  function renderTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const cf = document.getElementById('connFilter').value;
+    const pf = document.getElementById('pbFilter').value;
+    let list = models;
+
+    if (activeTab!=='all') list = list.filter(m=>m.mfrId===activeTab);
+    if (cf) list = list.filter(m=>m.conn===cf);
+    if (pf) list = list.filter(m=>m.pb===pf);
+    if (q) list = list.filter(m=>m.name.toLowerCase().includes(q));
+
+    const tbody = document.getElementById('tbody');
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">조건에 맞는 모델이 없습니다.</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(m => {
+      const mfr = getMfr(m.mfrId);
+      const connTag = m.conn==='Dual'
+        ? '<span class="tag tag-dual">Dual</span>'
+        : m.conn==='3mode'
+        ? '<span class="tag tag-3mode">3mode</span>'
+        : '<span class="tag tag-single">Single</span>';
+      const connTypesHtml = (m.connTypes&&m.connTypes.length)
+        ? `<div class="conn-chips">${m.connTypes.map(t=>`<span class="conn-chip">${t}</span>`).join('')}</div>`
+        : '<span style="color:var(--text-muted);font-size:12px;">—</span>';
+      const pbTag = m.pb
+        ? `<span class="tag tag-pb">${m.pb}</span>`
+        : '<span class="tag tag-na">—</span>';
+      const pmHtml = (m.pmKw && m.pmCount)
+        ? `<span class="pm-display">${m.pmKw}kW × ${m.pmCount}개</span>`
+        : '<span style="color:var(--text-muted);font-size:12px;">—</span>';
+
+      return `<tr>
+        <td><span class="mfr-tag"><span class="mfr-dot" style="background:${getMfrColor(m.mfrId)}"></span>${mfr?mfr.name:m.mfrId}</span></td>
+        <td style="font-weight:600;">${m.name}</td>
+        <td><span class="power-val">${m.power}</span><span class="power-unit">kW</span></td>
+        <td>${connTag}</td>
+        <td>${connTypesHtml}</td>
+        <td>${pbTag}</td>
+        <td>${pmHtml}</td>
+        <td><div class="actions-cell">
+          <button class="btn btn-ghost btn-sm" onclick="editModel(${m.id})">수정</button>
+          <button class="btn btn-danger-text btn-sm" onclick="confirmDel(${m.id})">삭제</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function updateStats() {
+    document.getElementById('s-mfr').textContent = manufacturers.length;
+    document.getElementById('s-total').textContent = models.length;
+    document.getElementById('s-dual').textContent = models.filter(m=>m.conn==='Dual').length;
+    document.getElementById('s-single').textContent = models.filter(m=>m.conn==='Single').length;
+  }
+
+  function renderAll() { renderTabs(); renderTable(); updateStats(); }
+  function setTab(el) { activeTab = el.dataset.tab; renderAll(); }
+
+  // ===== MODAL =====
+  function populateMfrSelect() {
+    const sel = document.getElementById('fMfr');
+    sel.innerHTML = '<option value="">선택</option>' +
+      manufacturers.map(m=>`<option value="${m.id}">${m.name}</option>`).join('') +
+      '<option value="__new__">+ 새 제조사 추가</option>';
+  }
+
+  document.getElementById('fMfr').addEventListener('change', function() {
+    if (this.value==='__new__') { toggleInlineAdd(true); this.value=''; } else { toggleInlineAdd(false); }
+  });
+
+  function toggleInlineAdd(show) {
+    document.getElementById('inlineAdd').classList.toggle('show', show);
+    if (show) document.getElementById('newMfrName').focus();
+  }
+
+  function addInlineMfr() {
+    const name = document.getElementById('newMfrName').value.trim();
+    if (!name) return;
+    const code = 'mfr_' + Date.now().toString(36);
+    const color = colorPool[colorIdx++ % colorPool.length];
+    MFR_COLORS[code] = color;
+    manufacturers.push({ id:code, name });
+    populateMfrSelect();
+    document.getElementById('fMfr').value = code;
+    document.getElementById('newMfrName').value = '';
+    toggleInlineAdd(false);
+    toast(`"${name}" 제조사 추가됨`);
+  }
+
+  function openModal() {
+    document.getElementById('modalTitle').textContent = '충전기 모델 추가';
+    document.getElementById('editId').value = '';
+    ['fMfr','fName','fModelCode','fNote'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('fPower').value = '';
+    document.getElementById('fConn').value = 'Dual';
+    document.getElementById('fPb').value = '';
+    document.getElementById('fPmKw').value = '';
+    document.getElementById('fPmCount').value = '';
+    document.querySelectorAll('#fConnTypes input').forEach(cb => cb.checked = false);
+    toggleInlineAdd(false);
+    populateMfrSelect();
+    document.getElementById('modal').classList.add('show');
+  }
+
+  function closeModal() { document.getElementById('modal').classList.remove('show'); toggleInlineAdd(false); }
+
+  function editModel(id) {
+    const m = models.find(x=>x.id===id);
+    if (!m) return;
+    populateMfrSelect();
+    document.getElementById('modalTitle').textContent = '충전기 모델 수정';
+    document.getElementById('editId').value = m.id;
+    document.getElementById('fMfr').value = m.mfrId;
+    document.getElementById('fName').value = m.name;
+    document.getElementById('fModelCode').value = m.modelCode||'';
+    document.getElementById('fPower').value = m.power;
+    document.getElementById('fConn').value = m.conn;
+    document.getElementById('fPb').value = m.pb;
+    document.getElementById('fPmKw').value = m.pmKw||'';
+    document.getElementById('fPmCount').value = m.pmCount||'';
+    document.getElementById('fNote').value = m.note;
+    // connTypes 체크박스 세팅
+    document.querySelectorAll('#fConnTypes input').forEach(cb => {
+      cb.checked = (m.connTypes||[]).includes(cb.value);
+    });
+    toggleInlineAdd(false);
+    document.getElementById('modal').classList.add('show');
+  }
+
+  function saveModel() {
+    const eid = document.getElementById('editId').value;
+    const mfrId = document.getElementById('fMfr').value;
+    const name = document.getElementById('fName').value.trim();
+    const modelCode = document.getElementById('fModelCode').value.trim();
+    const power = parseInt(document.getElementById('fPower').value)||0;
+    const conn = document.getElementById('fConn').value;
+    const connTypes = [...document.querySelectorAll('#fConnTypes input:checked')].map(cb=>cb.value);
+    const pb = document.getElementById('fPb').value;
+    const pmKw = parseInt(document.getElementById('fPmKw').value)||null;
+    const pmCount = parseInt(document.getElementById('fPmCount').value)||null;
+    const note = document.getElementById('fNote').value.trim();
+    if (!mfrId||!name) { toast('제조사와 모델명을 입력해주세요.'); return; }
+    if (!power) { toast('출력(kW)을 입력해주세요.'); return; }
+
+    if (eid) {
+      const i = models.findIndex(m=>m.id===parseInt(eid));
+      if (i!==-1) models[i] = {...models[i], mfrId, name, modelCode, power, conn, connTypes, pb, pmKw, pmCount, note};
+      toast(`"${name}" 수정 완료`);
+    } else {
+      models.push({ id:nextId++, mfrId, name, modelCode, power, conn, connTypes, pb, pmKw, pmCount, note });
+      toast(`"${name}" 추가 완료`);
+    }
+    closeModal(); renderAll();
+  }
+
+  // ===== DELETE =====
+  function confirmDel(id) {
+    const m = models.find(x=>x.id===id);
+    if (!m) return;
+    const mfr = getMfr(m.mfrId);
+    document.getElementById('delName').textContent = `${mfr?mfr.name:''} ${m.name} ${m.power}kW`;
+    document.getElementById('delBtn').onclick = () => {
+      const mfrId = m.mfrId;
+      models = models.filter(x=>x.id!==id);
+      // 해당 제조사 소속 모델이 0개면 제조사도 제거
+      if (!models.some(x=>x.mfrId===mfrId)) {
+        const mi = manufacturers.findIndex(x=>x.id===mfrId);
+        if (mi!==-1) manufacturers.splice(mi, 1);
+        if (activeTab===mfrId) activeTab = 'all';
+      }
+      document.getElementById('delModal').classList.remove('show');
+      renderAll(); toast(`삭제 완료`);
+    };
+    document.getElementById('delModal').classList.add('show');
+  }
+
+  // ===== TOAST =====
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  renderAll();
+</script>
+</body>
+</html>
