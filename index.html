@@ -63,16 +63,8 @@
   .stat-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; }
   .stat-card .value { font-size: 26px; font-weight: 800; letter-spacing: -1px; margin-top: 4px; }
 
-  /* Tabs */
-  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 0; overflow-x: auto; }
-  .tab { padding: 9px 16px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border: none; border-bottom: 2px solid transparent; background: none; font-family: inherit; transition: all 0.12s; white-space: nowrap; }
-  .tab:hover { color: var(--text-secondary); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-  .tab .cnt { font-size: 11px; background: var(--surface-hover); padding: 1px 6px; border-radius: 10px; margin-left: 4px; font-weight: 600; color: var(--text-muted); }
-  .tab.active .cnt { background: var(--accent-soft); color: var(--accent); }
-
   /* Table */
-  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 0 0 var(--radius) var(--radius); border-top: none; overflow: hidden; }
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   .table-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-light); gap: 8px; flex-wrap: wrap; }
   .toolbar-left { display: flex; gap: 8px; align-items: center; }
 
@@ -128,11 +120,6 @@
   .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px; border-top: 1px solid var(--border-light); }
 
-  .inline-add { display: none; gap: 8px; margin-top: 8px; align-items: center; }
-  .inline-add.show { display: flex; }
-  .inline-add input { flex: 1; padding: 7px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; color: var(--text); outline: none; }
-  .inline-add input:focus { border-color: var(--accent); }
-
   .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
   .pm-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
@@ -155,10 +142,16 @@
     <h1>충전기 모델 관리</h1>
     <p>외부 제조사별 충전기 모델 등록 및 관리</p>
   </div>
-  <button class="btn btn-primary" onclick="openModal()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    모델 추가
-  </button>
+  <div style="display:flex;gap:8px;">
+    <button class="btn btn-ghost" onclick="openMfrModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4"/></svg>
+      제조사 관리
+    </button>
+    <button class="btn btn-primary" onclick="openModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      모델 추가
+    </button>
+  </div>
 </div>
 
 <div class="stats-row">
@@ -168,15 +161,12 @@
   <div class="stat-card"><div class="label">단독 충전</div><div class="value" id="s-single">0</div></div>
 </div>
 
-<div class="tabs" id="tabsContainer"></div>
-
 <div class="table-card">
   <div class="table-toolbar">
     <div class="toolbar-left">
-      <div class="search-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="모델명 검색..." id="searchInput" oninput="renderTable()">
-      </div>
+      <select class="filter-select" id="mfrFilter" onchange="renderTable()">
+        <option value="">제조사 전체</option>
+      </select>
       <select class="filter-select" id="connFilter" onchange="renderTable()">
         <option value="">커넥터 전체</option>
         <option value="Dual">Dual</option>
@@ -189,6 +179,10 @@
         <option value="1:2">1:2</option>
         <option value="1:1">1:1</option>
       </select>
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="모델명 검색..." id="searchInput" oninput="renderTable()">
+      </div>
     </div>
   </div>
   <table>
@@ -219,11 +213,6 @@
       <div class="form-group">
         <label>제조사</label>
         <select id="fMfr"><option value="">선택</option></select>
-        <div class="inline-add" id="inlineAdd">
-          <input type="text" id="newMfrName" placeholder="새 제조사명 입력">
-          <button class="btn btn-primary btn-sm" onclick="addInlineMfr()">추가</button>
-          <button class="btn btn-ghost btn-sm" onclick="toggleInlineAdd(false)">취소</button>
-        </div>
       </div>
 
       <div class="form-group">
@@ -253,12 +242,11 @@
         <div class="form-group">
           <label>파워뱅크</label>
           <select id="fPb">
-            <option value="">해당없음</option>
             <option value="1:3">1:3</option>
             <option value="1:2">1:2</option>
             <option value="1:1">1:1</option>
           </select>
-          <div class="form-hint">파워뱅크 구성이 있는 경우만 선택</div>
+          <div class="form-hint">파워뱅크 구성을 선택해주세요.</div>
         </div>
       </div>
 
@@ -297,7 +285,50 @@
   </div>
 </div>
 
-<!-- Delete Modal -->
+<!-- Manufacturer Management Modal -->
+<div class="modal-overlay" id="mfrModal">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header">
+      <h2>제조사 관리</h2>
+      <button class="modal-close" onclick="closeMfrModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <input type="text" id="mfrInput" placeholder="제조사명 입력" style="flex:1;padding:8px 11px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-family:inherit;outline:none;">
+        <button class="btn btn-primary" id="mfrSaveBtn" onclick="saveMfr()">추가</button>
+        <button class="btn btn-ghost" id="mfrCancelBtn" onclick="cancelEditMfr()" style="display:none;">취소</button>
+      </div>
+      <input type="hidden" id="editMfrId">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border-light);background:var(--bg);">제조사명</th>
+            <th style="width:120px;text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border-light);background:var(--bg);">모델 수</th>
+            <th style="width:100px;padding:8px 12px;border-bottom:1px solid var(--border-light);background:var(--bg);"></th>
+          </tr>
+        </thead>
+        <tbody id="mfrTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Manufacturer Modal -->
+<div class="modal-overlay" id="delMfrModal">
+  <div class="modal" style="width:380px;">
+    <div class="modal-header">
+      <h2>제조사 삭제</h2>
+      <button class="modal-close" onclick="document.getElementById('delMfrModal').classList.remove('show')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body"><p class="delete-body" id="delMfrMsg"></p></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('delMfrModal').classList.remove('show')">취소</button>
+      <button class="btn btn-primary" style="background:var(--red);" id="delMfrBtn">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Model Modal -->
 <div class="modal-overlay" id="delModal">
   <div class="modal" style="width:380px;">
     <div class="modal-header">
@@ -328,43 +359,42 @@
   ];
 
   let models = [
-    { id:1,  mfrId:'sk',     name:'V1',          modelCode:'', power:200, conn:'Dual',   connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
-    { id:2,  mfrId:'sk',     name:'V1',          modelCode:'', power:100, conn:'Dual',   connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
-    { id:3,  mfrId:'sk',     name:'V2',          modelCode:'', power:200, conn:'Single', connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
+    { id:1,  mfrId:'sk',     name:'V1',          modelCode:'', power:200, conn:'Dual',   connTypes:['DC콤보'],              pb:'1:1', pmKw:null, pmCount:null, note:'' },
+    { id:2,  mfrId:'sk',     name:'V1',          modelCode:'', power:100, conn:'Dual',   connTypes:['DC콤보'],              pb:'1:1', pmKw:null, pmCount:null, note:'' },
+    { id:3,  mfrId:'sk',     name:'V2',          modelCode:'', power:200, conn:'Single', connTypes:['DC콤보'],              pb:'1:1', pmKw:null, pmCount:null, note:'' },
     { id:4,  mfrId:'sk',     name:'초급속',       modelCode:'', power:350, conn:'Single', connTypes:['DC콤보'],              pb:'1:3', pmKw:null, pmCount:null, note:'파워뱅크 1개 + 디스펜서 3개' },
     { id:5,  mfrId:'sk',     name:'초급속',       modelCode:'', power:350, conn:'Single', connTypes:['DC콤보'],              pb:'1:1', pmKw:null, pmCount:null, note:'배터리 내장형' },
-    { id:6,  mfrId:'eva',    name:'완속 충전기',   modelCode:'', power:7,   conn:'Single', connTypes:['AC완속'],              pb:'',    pmKw:null, pmCount:null, note:'' },
-    { id:7,  mfrId:'costel', name:'완속 충전기',   modelCode:'', power:7,   conn:'Single', connTypes:['AC완속'],              pb:'',    pmKw:null, pmCount:null, note:'' },
-    { id:8,  mfrId:'chavi',  name:'급속',         modelCode:'', power:100, conn:'Dual',   connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
-    { id:9,  mfrId:'chavi',  name:'급속',         modelCode:'', power:30,  conn:'Single', connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
-    { id:10, mfrId:'chavi',  name:'급속',         modelCode:'', power:100, conn:'Single', connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
-    { id:11, mfrId:'chavi',  name:'급속',         modelCode:'', power:200, conn:'Dual',   connTypes:['DC콤보'],              pb:'',    pmKw:null, pmCount:null, note:'' },
+    { id:6,  mfrId:'eva',    name:'완속 충전기',   modelCode:'', power:7,   conn:'Single', connTypes:['AC완속'],              pb:'1:1', pmKw:null, pmCount:null, note:'' },
+    { id:7,  mfrId:'costel', name:'완속 충전기',   modelCode:'', power:7,   conn:'Single', connTypes:['AC완속'],              pb:'1:1', pmKw:null, pmCount:null, note:'' },
+    { id:8,  mfrId:'chavi',  name:'급속',         modelCode:'', power:100, conn:'Dual',   connTypes:['DC콤보'],              pb:'1:1', pmKw:null, pmCount:null, note:'' },
+    { id:9,  mfrId:'chavi',  name:'급속',         modelCode:'', power:30,  conn:'Single', connTypes:['DC콤보'],              pb:'1:1', pmKw:null, pmCount:null, note:'' },
+    { id:10, mfrId:'chavi',  name:'급속',         modelCode:'', power:100, conn:'Single', connTypes:['DC콤보'],              pb:'1:1', pmKw:null, pmCount:null, note:'' },
+    { id:11, mfrId:'chavi',  name:'급속',         modelCode:'', power:200, conn:'Dual',   connTypes:['DC콤보'],              pb:'1:1', pmKw:null, pmCount:null, note:'' },
   ];
 
-  let nextId = 12, activeTab = 'all';
+  let nextId = 12;
 
   // ===== HELPERS =====
   function getMfr(id) { return manufacturers.find(m=>m.id===id); }
   function getMfrColor(id) { return MFR_COLORS[id]||'#6B7280'; }
 
   // ===== RENDER =====
-  function renderTabs() {
-    const c = document.getElementById('tabsContainer');
-    let h = `<button class="tab ${activeTab==='all'?'active':''}" data-tab="all" onclick="setTab(this)">전체 <span class="cnt">${models.length}</span></button>`;
-    manufacturers.forEach(m => {
-      const cnt = models.filter(x=>x.mfrId===m.id).length;
-      h += `<button class="tab ${activeTab===m.id?'active':''}" data-tab="${m.id}" onclick="setTab(this)">${m.name} <span class="cnt">${cnt}</span></button>`;
-    });
-    c.innerHTML = h;
+  function renderMfrFilter() {
+    const sel = document.getElementById('mfrFilter');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">제조사 전체</option>' +
+      manufacturers.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+    sel.value = current;
   }
 
   function renderTable() {
     const q = document.getElementById('searchInput').value.toLowerCase();
+    const mf = document.getElementById('mfrFilter').value;
     const cf = document.getElementById('connFilter').value;
     const pf = document.getElementById('pbFilter').value;
     let list = models;
 
-    if (activeTab!=='all') list = list.filter(m=>m.mfrId===activeTab);
+    if (mf) list = list.filter(m=>m.mfrId===mf);
     if (cf) list = list.filter(m=>m.conn===cf);
     if (pf) list = list.filter(m=>m.pb===pf);
     if (q) list = list.filter(m=>m.name.toLowerCase().includes(q));
@@ -385,9 +415,7 @@
       const connTypesHtml = (m.connTypes&&m.connTypes.length)
         ? `<div class="conn-chips">${m.connTypes.map(t=>`<span class="conn-chip">${t}</span>`).join('')}</div>`
         : '<span style="color:var(--text-muted);font-size:12px;">—</span>';
-      const pbTag = m.pb
-        ? `<span class="tag tag-pb">${m.pb}</span>`
-        : '<span class="tag tag-na">—</span>';
+      const pbTag = `<span class="tag tag-pb">${m.pb}</span>`;
       const pmHtml = (m.pmKw && m.pmCount)
         ? `<span class="pm-display">${m.pmKw}kW × ${m.pmCount}개</span>`
         : '<span style="color:var(--text-muted);font-size:12px;">—</span>';
@@ -415,38 +443,104 @@
     document.getElementById('s-single').textContent = models.filter(m=>m.conn==='Single').length;
   }
 
-  function renderAll() { renderTabs(); renderTable(); updateStats(); }
-  function setTab(el) { activeTab = el.dataset.tab; renderAll(); }
+  function renderAll() { renderMfrFilter(); renderTable(); updateStats(); }
 
   // ===== MODAL =====
   function populateMfrSelect() {
     const sel = document.getElementById('fMfr');
     sel.innerHTML = '<option value="">선택</option>' +
-      manufacturers.map(m=>`<option value="${m.id}">${m.name}</option>`).join('') +
-      '<option value="__new__">+ 새 제조사 추가</option>';
+      manufacturers.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
   }
 
-  document.getElementById('fMfr').addEventListener('change', function() {
-    if (this.value==='__new__') { toggleInlineAdd(true); this.value=''; } else { toggleInlineAdd(false); }
-  });
-
-  function toggleInlineAdd(show) {
-    document.getElementById('inlineAdd').classList.toggle('show', show);
-    if (show) document.getElementById('newMfrName').focus();
+  // ===== MANUFACTURER MODAL =====
+  function openMfrModal() {
+    document.getElementById('mfrInput').value = '';
+    document.getElementById('editMfrId').value = '';
+    renderMfrTable();
+    document.getElementById('mfrModal').classList.add('show');
   }
 
-  function addInlineMfr() {
-    const name = document.getElementById('newMfrName').value.trim();
-    if (!name) return;
-    const code = 'mfr_' + Date.now().toString(36);
-    const color = colorPool[colorIdx++ % colorPool.length];
-    MFR_COLORS[code] = color;
-    manufacturers.push({ id:code, name });
-    populateMfrSelect();
-    document.getElementById('fMfr').value = code;
-    document.getElementById('newMfrName').value = '';
-    toggleInlineAdd(false);
-    toast(`"${name}" 제조사 추가됨`);
+  function closeMfrModal() {
+    document.getElementById('mfrModal').classList.remove('show');
+    document.getElementById('editMfrId').value = '';
+    document.getElementById('mfrInput').value = '';
+    renderAll();
+  }
+
+  function renderMfrTable() {
+    const tbody = document.getElementById('mfrTableBody');
+    tbody.innerHTML = manufacturers.map(m => {
+      const cnt = models.filter(x=>x.mfrId===m.id).length;
+      return `<tr>
+        <td style="padding:10px 12px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border-light);">
+          <span class="mfr-tag"><span class="mfr-dot" style="background:${getMfrColor(m.id)}"></span>${m.name}</span>
+        </td>
+        <td style="padding:10px 12px;font-size:13px;color:var(--text-secondary);border-bottom:1px solid var(--border-light);">${cnt}개</td>
+        <td style="padding:10px 12px;border-bottom:1px solid var(--border-light);">
+          <div class="actions-cell">
+            <button class="btn btn-ghost btn-sm" onclick="editMfr('${m.id}')">수정</button>
+            <button class="btn btn-danger-text btn-sm" onclick="confirmDelMfr('${m.id}')">삭제</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function saveMfr() {
+    const name = document.getElementById('mfrInput').value.trim();
+    const editId = document.getElementById('editMfrId').value;
+    if (!name) { toast('제조사명을 입력해주세요.'); return; }
+
+    if (editId) {
+      const m = manufacturers.find(x=>x.id===editId);
+      if (m) m.name = name;
+      toast(`"${name}" 수정 완료`);
+    } else {
+      const code = 'mfr_' + Date.now().toString(36);
+      const color = colorPool[colorIdx++ % colorPool.length];
+      MFR_COLORS[code] = color;
+      manufacturers.push({ id:code, name });
+      toast(`"${name}" 추가 완료`);
+    }
+    cancelEditMfr();
+    renderMfrTable();
+  }
+
+  function editMfr(id) {
+    const m = manufacturers.find(x=>x.id===id);
+    if (!m) return;
+    document.getElementById('mfrInput').value = m.name;
+    document.getElementById('editMfrId').value = m.id;
+    document.getElementById('mfrSaveBtn').textContent = '저장';
+    document.getElementById('mfrCancelBtn').style.display = '';
+    document.getElementById('mfrInput').focus();
+  }
+
+  function cancelEditMfr() {
+    document.getElementById('editMfrId').value = '';
+    document.getElementById('mfrInput').value = '';
+    document.getElementById('mfrSaveBtn').textContent = '추가';
+    document.getElementById('mfrCancelBtn').style.display = 'none';
+  }
+
+  function confirmDelMfr(id) {
+    const m = manufacturers.find(x=>x.id===id);
+    if (!m) return;
+    const cnt = models.filter(x=>x.mfrId===id).length;
+    if (cnt > 0) {
+      document.getElementById('delMfrMsg').innerHTML = `<span class="delete-name">${m.name}</span>에 등록된 모델이 <span class="delete-name">${cnt}개</span> 있습니다. 제조사를 삭제하면 소속 모델도 함께 삭제됩니다.`;
+    } else {
+      document.getElementById('delMfrMsg').innerHTML = `<span class="delete-name">${m.name}</span> 제조사를 삭제하시겠습니까?`;
+    }
+    document.getElementById('delMfrBtn').onclick = () => {
+      models = models.filter(x=>x.mfrId!==id);
+      const mi = manufacturers.findIndex(x=>x.id===id);
+      if (mi!==-1) manufacturers.splice(mi, 1);
+      document.getElementById('delMfrModal').classList.remove('show');
+      renderMfrTable();
+      toast(`"${m.name}" 삭제 완료`);
+    };
+    document.getElementById('delMfrModal').classList.add('show');
   }
 
   function openModal() {
@@ -455,16 +549,15 @@
     ['fMfr','fName','fModelCode','fNote'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('fPower').value = '';
     document.getElementById('fConn').value = 'Dual';
-    document.getElementById('fPb').value = '';
+    document.getElementById('fPb').value = '1:1';
     document.getElementById('fPmKw').value = '';
     document.getElementById('fPmCount').value = '';
     document.querySelectorAll('#fConnTypes input').forEach(cb => cb.checked = false);
-    toggleInlineAdd(false);
     populateMfrSelect();
     document.getElementById('modal').classList.add('show');
   }
 
-  function closeModal() { document.getElementById('modal').classList.remove('show'); toggleInlineAdd(false); }
+  function closeModal() { document.getElementById('modal').classList.remove('show'); }
 
   function editModel(id) {
     const m = models.find(x=>x.id===id);
@@ -485,7 +578,6 @@
     document.querySelectorAll('#fConnTypes input').forEach(cb => {
       cb.checked = (m.connTypes||[]).includes(cb.value);
     });
-    toggleInlineAdd(false);
     document.getElementById('modal').classList.add('show');
   }
 
@@ -528,7 +620,6 @@
       if (!models.some(x=>x.mfrId===mfrId)) {
         const mi = manufacturers.findIndex(x=>x.id===mfrId);
         if (mi!==-1) manufacturers.splice(mi, 1);
-        if (activeTab===mfrId) activeTab = 'all';
       }
       document.getElementById('delModal').classList.remove('show');
       renderAll(); toast(`삭제 완료`);
